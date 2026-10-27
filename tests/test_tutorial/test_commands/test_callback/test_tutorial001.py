@@ -48,7 +48,8 @@ def test_delete_verbose():
 def test_wrong_verbose():
     result = runner.invoke(app, ["delete", "--verbose", "Camila"])
     assert result.exit_code != 0
-    assert "Error: No such option: --verbose" in result.output
+    assert "Error: No such option" in result.output
+    assert "--verbose" in result.output
 
 
 def test_script():

@@ -33,7 +33,7 @@ def test_install_invalid_shell():
         pass  # pragma: no cover
 
     result = runner.invoke(app, env={"_MAIN_COMPLETE": "xshell_source"})
-    assert "Shell 'xshell' is not supported." in result.stdout
+    assert "Shell 'xshell' is not supported." in result.output
 
 
 def test_callback_too_many_parameters():
@@ -184,7 +184,7 @@ def test_forward_references():
 
     assert (
         "Error: Invalid value for 'ARG3': 'invalid' is not a valid integer"
-        in result.stdout
+        in result.output
     )
     result = runner.invoke(app, ["Hello", "2", "3", "--arg4", "--arg5"])
     assert (

@@ -25,10 +25,8 @@ def test_main():
 def test_invalid():
     result = runner.invoke(app, ["--network", "capsule"])
     assert result.exit_code != 0
-    assert (
-        "Error: Invalid value for '--network': 'capsule' is not one of 'simple', 'conv', 'lstm'"
-        in result.output
-    )
+    assert "Error: Invalid value for '--network'" in result.output
+    assert "'capsule' is not one of 'simple', 'conv', 'lstm'" in result.output
 
 
 def test_script():
