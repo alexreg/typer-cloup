@@ -51,7 +51,7 @@ def Option(
     max: Optional[Union[int, float]] = None,
     clamp: bool = False,
     # DateTime
-    formats: Optional[Union[List[str]]] = None,
+    formats: Optional[List[str]] = None,
     # File
     mode: Optional[str] = None,
     encoding: Optional[str] = None,
@@ -156,7 +156,7 @@ def Argument(
     max: Optional[Union[int, float]] = None,
     clamp: bool = False,
     # DateTime
-    formats: Optional[Union[List[str]]] = None,
+    formats: Optional[List[str]] = None,
     # File
     mode: Optional[str] = None,
     encoding: Optional[str] = None,
