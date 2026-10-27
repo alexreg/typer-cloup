@@ -255,7 +255,7 @@ class ParameterInfo:
         *,
         default: Optional[Any] = None,
         param_decls: Optional[Sequence[str]] = None,
-        type: Optional[Union[click.types.ParamType, Any]] = None,
+        type: Optional[Union[click.types.ParamType[Any], Any]] = None,
         callback: Optional[Callable[..., Any]] = None,
         metavar: Optional[str] = None,
         expose_value: bool = True,
@@ -350,7 +350,7 @@ class OptionInfo(ParameterInfo):
         # ParameterInfo
         default: Optional[Any] = None,
         param_decls: Optional[Sequence[str]] = None,
-        type: Optional[Union[click.types.ParamType, Any]] = None,
+        type: Optional[Union[click.types.ParamType[Any], Any]] = None,
         callback: Optional[Callable[..., Any]] = None,
         metavar: Optional[str] = None,
         expose_value: bool = True,
@@ -463,7 +463,7 @@ class ArgumentInfo(ParameterInfo):
         # ParameterInfo
         default: Optional[Any] = None,
         param_decls: Optional[Sequence[str]] = None,
-        type: Optional[Union[click.types.ParamType, Any]] = None,
+        type: Optional[Union[click.types.ParamType[Any], Any]] = None,
         callback: Optional[Callable[..., Any]] = None,
         metavar: Optional[str] = None,
         expose_value: bool = True,
