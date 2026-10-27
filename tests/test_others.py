@@ -23,10 +23,55 @@ def test_import_without_deprecation_warnings():
     assert result.returncode == 0, result.stderr
 
 
-def test_help_from_info():
+@pytest.mark.parametrize("kwargs", [{}, {"typer_instance": None}])
+def test_help_from_info(kwargs):
     # Mainly for coverage/completeness
-    value = solve_typer_info_help(TyperInfo())
+    value = solve_typer_info_help(TyperInfo(**kwargs))
     assert value is None
+
+
+@pytest.mark.parametrize("priority", range(6))
+def test_help_source_priority(priority):
+    def added_callback():
+        """Added callback docstring."""
+
+    def registered_callback():
+        """Registered callback docstring."""
+
+    def instance_callback():
+        """Instance callback docstring."""
+
+    app = typer.Typer(callback=instance_callback)
+    registered_info = TyperInfo()
+    app.registered_callback = registered_info
+    info = TyperInfo(app)
+
+    if priority <= 0:
+        info.help = "Added help"
+    if priority <= 1:
+        registered_info.help = "Registered help"
+    if priority <= 2:
+        app.info.help = "Instance help"
+    if priority <= 3:
+        info.callback = added_callback
+    if priority <= 4:
+        registered_info.callback = registered_callback
+
+    expected = [
+        "Added help",
+        "Registered help",
+        "Instance help",
+        "Added callback docstring.",
+        "Registered callback docstring.",
+        "Instance callback docstring.",
+    ]
+    assert solve_typer_info_help(info) == expected[priority]
+
+
+@pytest.mark.parametrize("help", [None, ""])
+def test_explicit_empty_help_suppresses_fallback(help):
+    app = typer.Typer(help="Instance help")
+    assert solve_typer_info_help(TyperInfo(app, help=help)) == ""
 
 
 def test_defaults_from_info():

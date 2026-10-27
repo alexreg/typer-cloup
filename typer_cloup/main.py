@@ -18,6 +18,7 @@ from typing import (
     Type,
     Union,
     cast,
+    get_args,
 )
 from uuid import UUID
 
@@ -407,43 +408,43 @@ def solve_typer_info_help(typer_info: TyperInfo) -> str:
     # Priority 1: Explicit value was set in app.add_sub()
     if not isinstance(typer_info.help, DefaultPlaceholder):
         return inspect.cleandoc(typer_info.help or "")
+
+    typer_instance = typer_info.typer_instance
+    if isinstance(typer_instance, DefaultPlaceholder):
+        typer_instance = None
+    registered_callback = (
+        typer_instance.registered_callback if typer_instance is not None else None
+    )
+
     # Priority 2: Explicit value was set in sub_app.callback()
-    try:
-        callback_help = typer_info.typer_instance.registered_callback.help
+    if registered_callback is not None:
+        callback_help = registered_callback.help
         if not isinstance(callback_help, DefaultPlaceholder):
             return inspect.cleandoc(callback_help or "")
-    except AttributeError:
-        pass
     # Priority 3: Explicit value was set in sub_app = typer.Typer()
-    try:
-        instance_help = typer_info.typer_instance.info.help
+    if typer_instance is not None:
+        instance_help = typer_instance.info.help
         if not isinstance(instance_help, DefaultPlaceholder):
             return inspect.cleandoc(instance_help or "")
-    except AttributeError:
-        pass
     # Priority 4: Implicit inference from callback docstring in app.add_sub()
     if typer_info.callback:
         doc = inspect.getdoc(typer_info.callback)
         if doc:
             return doc
     # Priority 5: Implicit inference from callback docstring in @app.callback()
-    try:
-        callback = typer_info.typer_instance.registered_callback.callback
+    if registered_callback is not None:
+        callback = registered_callback.callback
         if not isinstance(callback, DefaultPlaceholder):
             doc = inspect.getdoc(callback or "")
             if doc:
                 return doc
-    except AttributeError:
-        pass
     # Priority 6: Implicit inference from callback docstring in typer.Typer()
-    try:
-        instance_callback = typer_info.typer_instance.info.callback
+    if typer_instance is not None:
+        instance_callback = typer_instance.info.callback
         if not isinstance(instance_callback, DefaultPlaceholder):
             doc = inspect.getdoc(instance_callback)
             if doc:
                 return doc
-    except AttributeError:
-        pass
     # Value not set, use the default
     return typer_info.help.value
 
@@ -910,7 +911,7 @@ def get_click_param(
     if is_list or parameter_type is SHELL_QUOTED_LIST:
         convertor = generate_list_convertor(convertor)
     if is_tuple:
-        convertor = generate_tuple_convertor(main_type.__args__)
+        convertor = generate_tuple_convertor(get_args(main_type))
     if isinstance(parameter_info, OptionInfo):
         if main_type is bool and not (parameter_info.is_flag is False):
             is_flag = True
