@@ -1,3 +1,4 @@
+import inspect
 import os
 import sys
 from gettext import gettext as _
@@ -8,17 +9,18 @@ from typing import (
     Dict,
     List,
     Mapping,
+    MutableMapping,
     Optional,
     Sequence,
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 import click
 import click.core
 import click.formatting
-import click.parser
 import click.types
 import cloup
 
@@ -26,6 +28,16 @@ from .models import Context
 
 if TYPE_CHECKING:  # pragma: no cover
     import click.shell_completion
+
+
+# Copied from click.parser._split_opt to avoid depending on the deprecated parser.
+def _split_opt(opt: str) -> Tuple[str, str]:
+    first = opt[:1]
+    if first.isalnum():
+        return "", opt
+    if opt[1:2] == first:
+        return opt[:2], opt[2:]
+    return first, opt[1:]
 
 
 class TyperParameterMixin(click.Parameter):
@@ -44,6 +56,10 @@ class TyperParameterMixin(click.Parameter):
             ctx.params[self.name] = self.convertor(ctx.params[self.name])  # type: ignore
 
         return value, args
+
+    def value_is_missing(self, value: Any) -> bool:
+        # Preserve Typer's None handling and Click's handling of UNSET and tuples.
+        return value is None or super().value_is_missing(value)
 
 
 class TyperArgument(TyperParameterMixin, cloup.Argument):
@@ -126,7 +142,7 @@ class TyperArgument(TyperParameterMixin, cloup.Argument):
         # Modified version of click.core.Option.get_help_record()
         # to support arguments
 
-        name = self.make_metavar()
+        name = self.make_metavar(ctx)
         help = self.help or ""
         extra = []
 
@@ -197,7 +213,7 @@ class TyperArgument(TyperParameterMixin, cloup.Argument):
 
         return name, help
 
-    def make_metavar(self) -> str:
+    def make_metavar(self, ctx: Optional[click.Context] = None) -> str:
         # Modified version of click.core.Argument.make_metavar()
         # to include Argument name
         if self.metavar is not None:
@@ -205,7 +221,11 @@ class TyperArgument(TyperParameterMixin, cloup.Argument):
         var = (self.name or "").upper()
         if not self.required:
             var = "[{}]".format(var)
-        type_var = self.type.get_metavar(self)
+        get_metavar = cast(Callable[..., Optional[str]], self.type.get_metavar)
+        if "ctx" in inspect.signature(get_metavar).parameters:
+            type_var = get_metavar(self, ctx=ctx)
+        else:
+            type_var = get_metavar(self)
         if type_var:
             var += f":{type_var}"
         if self.nargs != 1:
@@ -260,6 +280,10 @@ class TyperOption(TyperParameterMixin, cloup.Option):
         # cloup.Option
         group: Optional[cloup.OptionGroup] = None,
     ):
+        # Click 8.3 distinguishes an omitted flag_value from an explicit None.
+        kwargs: Dict[str, Any] = {}
+        if flag_value is not None:
+            kwargs["flag_value"] = flag_value
         super().__init__(
             param_decls=param_decls,
             type=type,
@@ -279,7 +303,6 @@ class TyperOption(TyperParameterMixin, cloup.Option):
             prompt_required=prompt_required,
             hide_input=hide_input,
             is_flag=is_flag,
-            flag_value=flag_value,
             multiple=multiple,
             count=count,
             allow_from_autoenv=allow_from_autoenv,
@@ -288,7 +311,14 @@ class TyperOption(TyperParameterMixin, cloup.Option):
             show_choices=show_choices,
             show_envvar=show_envvar,
             group=group,
+            **kwargs,
         )
+
+    def make_metavar(self, ctx: Optional[click.Context] = None) -> str:
+        make_metavar = cast(Callable[..., str], super().make_metavar)
+        if "ctx" in inspect.signature(make_metavar).parameters:
+            return make_metavar(ctx=ctx)
+        return make_metavar()
 
     def resolve_envvar_value(self, ctx: click.Context) -> Optional[str]:
         rv = click.Parameter.resolve_envvar_value(self, ctx)
@@ -329,7 +359,7 @@ class TyperOption(TyperParameterMixin, cloup.Option):
                 any_prefix_is_slash = True
 
             if not self.is_flag and not self.count:
-                rv += f" {self.make_metavar()}"
+                rv += f" {self.make_metavar(ctx)}"
 
             return rv
 
@@ -398,11 +428,11 @@ class TyperOption(TyperParameterMixin, cloup.Option):
                 # )[1]
                 if self.default:
                     if self.opts:
-                        default_string = click.parser.split_opt(self.opts[0])[1]
+                        default_string = _split_opt(self.opts[0])[1]
                     else:
                         default_string = str(default_value)
                 else:
-                    default_string = click.parser.split_opt(self.secondary_opts[0])[1]
+                    default_string = _split_opt(self.secondary_opts[0])[1]
                 # Typer override end
             elif self.is_bool_flag and not self.secondary_opts and not default_value:
                 default_string = ""
@@ -440,7 +470,7 @@ class TyperOption(TyperParameterMixin, cloup.Option):
 def _typer_main_shell_completion(
     self: click.core.Command,
     *,
-    ctx_args: Dict[str, Any],
+    ctx_args: MutableMapping[str, Any],
     prog_name: str,
     complete_var: Optional[str] = None,
 ) -> None:
@@ -461,11 +491,11 @@ def _typer_main_shell_completion(
 class TyperCommand(cloup.Command):
     """A Typer command."""
 
-    context_class: Type[Context] = Context
+    context_class: Type[cloup.Context] = Context
 
     def _main_shell_completion(
         self,
-        ctx_args: Dict[str, Any],
+        ctx_args: MutableMapping[str, Any],
         prog_name: str,
         complete_var: Optional[str] = None,
     ) -> None:
@@ -507,4 +537,4 @@ class TyperCommand(cloup.Command):
 class TyperGroup(TyperCommand, cloup.Group):
     """A Typer group."""
 
-    context_class: Type[Context] = Context
+    context_class: Type[cloup.Context] = Context

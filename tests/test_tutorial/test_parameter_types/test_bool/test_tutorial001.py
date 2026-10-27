@@ -32,7 +32,8 @@ def test_force():
 def test_invalid_no_force():
     result = runner.invoke(app, ["--no-force"])
     assert result.exit_code != 0
-    assert "Error: No such option: --no-force" in result.output
+    assert "Error: No such option" in result.output
+    assert "--no-force" in result.output
 
 
 def test_script():

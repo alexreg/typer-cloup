@@ -46,7 +46,7 @@ from .models import (
     Required,
     TyperInfo,
 )
-from .param_types import SHELL_QUOTED_LIST
+from .param_types import SHELL_QUOTED_LIST, TyperChoice
 from .utils import get_params_from_function
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -820,7 +820,7 @@ def get_click_type(
             atomic=parameter_info.atomic,
         )
     elif lenient_issubclass(annotation, Enum):
-        return click.Choice(
+        return TyperChoice(
             [item.value for item in annotation],
             case_sensitive=parameter_info.case_sensitive,
         )

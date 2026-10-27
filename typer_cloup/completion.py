@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, MutableMapping
 
 import click
 import click.exceptions
@@ -8,8 +8,8 @@ from click.shell_completion import get_completion_class
 
 # Re-implement `shell_complete` to add error messages.
 def shell_complete(
-    cli: click.BaseCommand,
-    ctx_args: Dict[str, Any],
+    cli: click.Command,
+    ctx_args: MutableMapping[str, Any],
     prog_name: str,
     complete_var: str,
     instruction: str,
