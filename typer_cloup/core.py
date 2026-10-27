@@ -343,6 +343,9 @@ class TyperOption(TyperParameterMixin, cloup.Option):
         return None
 
     def get_help_record(self, ctx: click.Context) -> Optional[Tuple[str, str]]:
+        if self.hidden:
+            return None
+
         # Duplicate all of Click's logic with two exceptions:
         # 1.  handle case when `ctx.auto_envvar_prefix` is empty string
         # 2.  to allow boolean flags with only names for False values as it's currently supported by Typer
@@ -521,6 +524,13 @@ class TyperCommand(cloup.Command):
                 if not is_arg_hidden(arg)
             ],
         )
+
+    def get_argument_help_record(
+        self, arg: click.Argument, ctx: click.Context
+    ) -> Tuple[str, str]:
+        if isinstance(arg, TyperArgument):
+            return arg.get_help_record(ctx)
+        return super().get_argument_help_record(arg, ctx)
 
     def get_default_option_group(
         self, ctx: click.Context, is_the_only_visible_option_group: bool = False

@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import click
@@ -11,6 +12,15 @@ from typer_cloup.models import TyperInfo
 from typer_cloup.testing import CliRunner
 
 runner = CliRunner()
+
+
+def test_import_without_deprecation_warnings():
+    result = subprocess.run(
+        [sys.executable, "-Werror::DeprecationWarning", "-c", "import typer_cloup"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_help_from_info():

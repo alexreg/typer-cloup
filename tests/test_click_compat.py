@@ -6,8 +6,20 @@ import pytest
 from click.testing import CliRunner as ClickCliRunner
 
 import typer_cloup as typer
-from typer_cloup.core import TyperArgument, TyperOption
+from typer_cloup.core import TyperArgument, TyperCommand, TyperOption
 from typer_cloup.testing import CliRunner
+
+
+@pytest.mark.parametrize("help", [None, "Native argument"])
+def test_native_argument_help(help):
+    argument = click.Argument(["name"], help=help)
+    command = TyperCommand("main", params=[argument])
+    result = ClickCliRunner().invoke(command, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "Arguments:" in result.output
+    assert "NAME" in result.output
+    if help:
+        assert help in result.output
 
 
 @pytest.mark.parametrize("default", [False, True])
