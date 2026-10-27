@@ -281,7 +281,7 @@ class ParameterInfo:
         max: Optional[Union[int, float]] = None,
         clamp: bool = False,
         # DateTime
-        formats: Optional[Union[List[str]]] = None,
+        formats: Optional[List[str]] = None,
         # File
         mode: Optional[str] = None,
         encoding: Optional[str] = None,
@@ -384,7 +384,7 @@ class OptionInfo(ParameterInfo):
         max: Optional[Union[int, float]] = None,
         clamp: bool = False,
         # DateTime
-        formats: Optional[Union[List[str]]] = None,
+        formats: Optional[List[str]] = None,
         # File
         mode: Optional[str] = None,
         encoding: Optional[str] = None,
@@ -489,7 +489,7 @@ class ArgumentInfo(ParameterInfo):
         max: Optional[Union[int, float]] = None,
         clamp: bool = False,
         # DateTime
-        formats: Optional[Union[List[str]]] = None,
+        formats: Optional[List[str]] = None,
         # File
         mode: Optional[str] = None,
         encoding: Optional[str] = None,
