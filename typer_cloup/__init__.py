@@ -22,8 +22,6 @@ from click.termui import unstyle as unstyle
 from click.utils import echo as echo
 from click.utils import format_filename as format_filename
 from click.utils import get_app_dir as get_app_dir
-from click.utils import get_binary_stream as get_binary_stream
-from click.utils import get_text_stream as get_text_stream
 from click.utils import open_file as open_file
 
 from . import colors as colors

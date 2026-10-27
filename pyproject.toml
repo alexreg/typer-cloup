@@ -29,7 +29,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "cloup ~= 2.0.0",
+  "cloup ~= 4.0",
 ]
 dynamic = ["version", "description"]
 keywords = ["cli", "click", "cloup", "shell", "terminal", "typer", "typehints"]
@@ -39,7 +39,7 @@ maintainers = [
 ]
 name = "typer-cloup"
 readme = "README.md"
-requires-python = ">= 3.7"
+requires-python = ">= 3.11"
 
 [project.urls]
 documentation = "https://typer-cloup.netlify.app"
