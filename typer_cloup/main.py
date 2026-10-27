@@ -2,7 +2,9 @@ import inspect
 from datetime import datetime
 from enum import Enum
 from functools import update_wrapper
+from importlib import import_module
 from pathlib import Path
+from types import ModuleType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -23,9 +25,9 @@ import click
 import cloup
 
 try:
-    import docstring_parser
+    docstring_parser: Optional[ModuleType] = import_module("docstring_parser")
 except ImportError:  # pragma: no cover
-    docstring_parser = None  # type: ignore
+    docstring_parser = None
 
 from .core import TyperArgument, TyperCommand, TyperGroup, TyperOption
 from .models import (
@@ -557,7 +559,7 @@ def get_command_name(name: str) -> str:
 
 
 def get_params_convertors_ctx_param_name_from_function(
-    callback: Optional[Callable[..., Any]]
+    callback: Optional[Callable[..., Any]],
 ) -> Tuple[List[Union[click.Argument, click.Option]], Dict[str, Any], Optional[str]]:
     params = {}
     convertors = {}
@@ -674,7 +676,7 @@ def generate_enum_convertor(enum: Type[Enum]) -> Callable[[Any], Any]:
 
 
 def generate_list_convertor(
-    convertor: Optional[Callable[[Any], Any]]
+    convertor: Optional[Callable[[Any], Any]],
 ) -> Callable[[Sequence[Any]], List[Any]]:
     def internal_convertor(value: Sequence[Any]) -> List[Any]:
         return [convertor(v) if convertor else v for v in value]
@@ -717,7 +719,7 @@ def get_callback(
             use_params[k] = v
         if context_param_name:
             use_params[context_param_name] = click.get_current_context()
-        return callback(**use_params)  # type: ignore
+        return callback(**use_params)
 
     update_wrapper(wrapper, callback)
     return wrapper
@@ -740,7 +742,7 @@ def get_constraints(
 
 def get_click_type(
     *, annotation: Any, parameter_info: ParameterInfo
-) -> click.ParamType:
+) -> click.ParamType[Any]:
     if annotation == Any:
         return click.UNPROCESSED
     if annotation == str:
@@ -1045,14 +1047,14 @@ def get_param_callback(
             else:
                 use_value = value
             use_params[value_name] = use_value
-        return callback(**use_params)  # type: ignore
+        return callback(**use_params)
 
     update_wrapper(wrapper, callback)
     return wrapper
 
 
 def get_param_completion(
-    callback: Optional[Callable[..., Any]] = None
+    callback: Optional[Callable[..., Any]] = None,
 ) -> Optional[Callable[..., Any]]:
     if not callback:
         return None
@@ -1099,7 +1101,7 @@ def get_param_completion(
             use_params[param_name] = param
         if incomplete_name:
             use_params[incomplete_name] = incomplete
-        return callback(**use_params)  # type: ignore
+        return callback(**use_params)
 
     update_wrapper(wrapper, callback)
     return wrapper

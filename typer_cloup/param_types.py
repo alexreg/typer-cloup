@@ -1,11 +1,13 @@
 import shlex
 from enum import Enum
-from typing import Any, Optional, Sequence
+from typing import Any, List, Optional, Sequence, TypeVar, Union
 
 import click
 
+ChoiceValue = TypeVar("ChoiceValue")
 
-class TyperChoice(click.Choice):
+
+class TyperChoice(click.Choice[ChoiceValue]):
     def normalize_choice(self, choice: Any, ctx: Optional[click.Context]) -> str:
         # Click 8.2 normalizes Enum names; Typer accepts their values instead.
         value = str(choice.value) if isinstance(choice, Enum) else str(choice)
@@ -16,17 +18,19 @@ class TyperChoice(click.Choice):
         return value
 
 
-class ShellQuotedList(click.ParamType):
+class ShellQuotedList(
+    click.ParamType[Optional[List[str]], Union[str, List[str], None]]
+):
     """Converts a shell-quoted string into a list of strings."""
 
     name = "shell-quoted-list"
 
     def convert(
         self,
-        value: Any,
+        value: Union[str, List[str], None],
         param: Optional["click.Parameter"],
         ctx: Optional["click.Context"],
-    ) -> Any:
+    ) -> Optional[List[str]]:
         if value is None:
             return None
         elif isinstance(value, list):

@@ -53,7 +53,7 @@ class TyperParameterMixin(click.Parameter):
         value, args = super().handle_parse_result(ctx, opts, args)
 
         if self.convertor and self.expose_value:
-            ctx.params[self.name] = self.convertor(ctx.params[self.name])  # type: ignore
+            ctx.params[self.name] = self.convertor(ctx.params[self.name])
 
         return value, args
 
@@ -70,7 +70,7 @@ class TyperArgument(TyperParameterMixin, cloup.Argument):
         *,
         # click.Parameter
         param_decls: List[str],
-        type: Optional[Union[click.types.ParamType, Any]] = None,
+        type: Optional[Union[click.types.ParamType[Any], Any]] = None,
         required: Optional[bool] = None,
         default: Optional[Any] = None,
         callback: Optional[Callable[..., Any]] = None,
@@ -245,7 +245,7 @@ class TyperOption(TyperParameterMixin, cloup.Option):
         self,
         # click.Parameter
         param_decls: List[str],
-        type: Optional[Union[click.types.ParamType, Any]] = None,
+        type: Optional[Union[click.types.ParamType[Any], Any]] = None,
         required: Optional[bool] = None,
         default: Optional[Any] = None,
         callback: Optional[Callable[..., Any]] = None,

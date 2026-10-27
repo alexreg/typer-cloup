@@ -1,6 +1,6 @@
 import inspect
 from gettext import gettext as _
-from types import ModuleType
+from importlib import metadata
 from typing import TYPE_CHECKING, Any, Callable, List, Optional, Type, Union, cast
 
 import click
@@ -17,7 +17,7 @@ def Option(
     # Parameter
     default: Optional[Any],
     *param_decls: str,
-    type: Optional[Union[click.types.ParamType, Any]] = None,
+    type: Optional[Union[click.types.ParamType[Any], Any]] = None,
     callback: Optional[Callable[..., Any]] = None,
     metavar: Optional[str] = None,
     expose_value: bool = True,
@@ -130,7 +130,7 @@ def Argument(
     # Parameter
     default: Optional[Any],
     *,
-    type: Optional[Union[click.types.ParamType, Any]] = None,
+    type: Optional[Union[click.types.ParamType[Any], Any]] = None,
     callback: Optional[Callable[..., Any]] = None,
     metavar: Optional[str] = None,
     expose_value: bool = True,
@@ -238,7 +238,7 @@ def VersionOption(
 ) -> Any:
     """Specify a ``--version`` option which immediately prints the version number and exits the program.
 
-    If ``version`` is not provided, Typer will try to detect it using :func:`importlib.metadata.version` to get the version for the ``package_name``. On Python < 3.8, the ``importlib_metadata`` backport must be installed.
+    If ``version`` is not provided, Typer will try to detect it using :func:`importlib.metadata.version` to get the version for the ``package_name``.
 
     If ``package_name`` is not provided, Typer will try to detect it by inspecting the stack frames. This will be used to detect the version, so it must match the name of the installed package.
 
@@ -263,7 +263,7 @@ def VersionOption(
         del frame
 
         if f_globals is not None:
-            package_name: str = f_globals.get("__name__")
+            package_name = f_globals.get("__name__")
 
             if package_name == "__main__":
                 package_name = f_globals.get("__package__")  # pragma: no cover
@@ -282,17 +282,9 @@ def VersionOption(
             prog_name = ctx.find_root().info_name
 
         if version is None and package_name is not None:
-            metadata: Optional[ModuleType]
-
             try:
-                from importlib import metadata  # type: ignore
-            except ImportError:  # pragma: no cover
-                # Python < 3.8
-                import importlib_metadata as metadata  # type: ignore
-
-            try:
-                version = metadata.version(package_name)  # type: ignore
-            except metadata.PackageNotFoundError:  # type: ignore
+                version = metadata.version(package_name)
+            except metadata.PackageNotFoundError:
                 raise RuntimeError(
                     f"{package_name!r} is not installed. Try passing 'package_name' instead."
                 ) from None
@@ -303,8 +295,7 @@ def VersionOption(
             )
 
         click.echo(
-            cast(str, message)
-            % {"prog": prog_name, "package": package_name, "version": version},
+            message % {"prog": prog_name, "package": package_name, "version": version},
             color=ctx.color,
         )
         ctx.exit()
