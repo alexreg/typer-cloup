@@ -1,12 +1,13 @@
 import os
 import subprocess
+import sys
 
 from docs_src.commands.help import tutorial001 as mod
 
 
 def test_completion_complete_subcommand_bash():
     result = subprocess.run(
-        ["coverage", "run", mod.__file__, " "],
+        [sys.executable, "-m", "coverage", "run", mod.__file__, " "],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",
@@ -23,7 +24,7 @@ def test_completion_complete_subcommand_bash():
 
 def test_completion_complete_subcommand_bash_invalid():
     result = subprocess.run(
-        ["coverage", "run", mod.__file__, " "],
+        [sys.executable, "-m", "coverage", "run", mod.__file__, " "],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",
@@ -45,7 +46,7 @@ def test_completion_complete_subcommand_bash_invalid():
 
 def test_completion_complete_subcommand_bash_argument():
     result = subprocess.run(
-        ["coverage", "run", mod.__file__, " "],
+        [sys.executable, "-m", "coverage", "run", mod.__file__, " "],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",
@@ -62,7 +63,7 @@ def test_completion_complete_subcommand_bash_argument():
 
 def test_completion_complete_subcommand_zsh():
     result = subprocess.run(
-        ["coverage", "run", mod.__file__, " "],
+        [sys.executable, "-m", "coverage", "run", mod.__file__, " "],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",
@@ -82,7 +83,7 @@ def test_completion_complete_subcommand_zsh():
 
 def test_completion_complete_subcommand_fish():
     result = subprocess.run(
-        ["coverage", "run", mod.__file__, " "],
+        [sys.executable, "-m", "coverage", "run", mod.__file__, " "],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",

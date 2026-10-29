@@ -1,4 +1,5 @@
 import subprocess
+import sys
 
 import typer_cloup as typer
 from docs_src.parameter_types.bool import tutorial003 as mod
@@ -30,7 +31,7 @@ def test_no_force():
 
 def test_script():
     result = subprocess.run(
-        ["coverage", "run", mod.__file__, "--help"],
+        [sys.executable, "-m", "coverage", "run", mod.__file__, "--help"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",
