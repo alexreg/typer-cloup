@@ -1,4 +1,5 @@
 import inspect
+from copy import copy
 from datetime import datetime
 from enum import Enum
 from functools import update_wrapper
@@ -500,18 +501,38 @@ def get_group_from_info(group_info: TyperInfo) -> click.Group:
         group_info.typer_instance
     ), "A Typer instance is needed to generate a Click Group"
     commands: Dict[str, click.Command] = {}
-    sections = set()
+    # Build sections without mutating the registered section objects.
+    sections: Dict[cloup.Section, cloup.Section] = {}
     for command_info in group_info.typer_instance.registered_commands:
         command = get_command_from_info(command_info=command_info)
         if command.name:
             commands[command.name] = command
             if isinstance(command, cloup.Command) and command_info.section is not None:
-                command_info.section.add_command(command, command.name)
-                sections.add(command_info.section)
+                if command_info.section not in sections:
+                    section = copy(command_info.section)
+                    section.commands = command_info.section.commands.copy()
+                    sections[command_info.section] = section
+                section = sections[command_info.section]
+                section.add_command(command, command.name)
     for sub_group_info in group_info.typer_instance.registered_groups:
         sub_group = get_group_from_info(sub_group_info)
         if sub_group.name:
             commands[sub_group.name] = sub_group
+        else:
+            if sub_group.callback:
+                import warnings
+
+                warnings.warn(
+                    "The `callback` parameter is not supported when using "
+                    "`add_sub()` without a name",
+                    stacklevel=5,
+                )
+            commands.update(sub_group.commands)
+            if isinstance(sub_group, cloup.Group):
+                for section in sub_group.list_sections(
+                    cloup.Context(sub_group), include_default_section=False
+                ):
+                    sections[section] = section
     solved_info = solve_typer_info_defaults(group_info)
     (
         params,
@@ -520,9 +541,27 @@ def get_group_from_info(group_info: TyperInfo) -> click.Group:
     ) = get_params_convertors_ctx_param_name_from_function(solved_info.callback)
     cls = cast(Optional[Type[click.Group]], solved_info.cls) or TyperGroup
     kwargs: Dict[str, Any] = {}
+    group_commands = commands
+    sections_to_add: List[cloup.Section] = []
     if issubclass(cls, cloup.Group):
+        for section in sections.values():
+            section_copy = copy(section)
+            section_copy.commands = section.commands.copy()
+            for name, command in section.commands.items():
+                if name in commands and commands[name] is not command:
+                    del section_copy.commands[name]
+            if section_copy.commands:
+                sections_to_add.append(section_copy)
+        # Sectioned commands must not also enter Cloup's default section.
+        sectioned_names = {
+            name for section in sections_to_add for name in section.commands
+        }
+        group_commands = {
+            name: command
+            for name, command in commands.items()
+            if name not in sectioned_names
+        }
         kwargs = dict(
-            sections=sections,
             align_sections=solved_info.align_sections,
             show_subcommand_aliases=solved_info.show_subcommand_aliases,
             constraints=get_constraints(
@@ -535,7 +574,7 @@ def get_group_from_info(group_info: TyperInfo) -> click.Group:
         )
     group = cls(
         name=solved_info.name or "",
-        commands=commands,
+        commands=group_commands,
         invoke_without_command=solved_info.invoke_without_command,
         no_args_is_help=solved_info.no_args_is_help,
         subcommand_metavar=solved_info.subcommand_metavar,
@@ -557,10 +596,14 @@ def get_group_from_info(group_info: TyperInfo) -> click.Group:
         deprecated=solved_info.deprecated,
         **kwargs,
     )
+    if isinstance(group, cloup.Group):
+        # Cloup's alias registry is initialized after its constructor adds sections.
+        for section in sections_to_add:
+            group.add_section(section)
     if solved_info.aliases:
         group.aliases = list(solved_info.aliases)  # type: ignore
     for name, command in commands.items():
-        aliases = getattr(command, "aliases") or ()
+        aliases = getattr(command, "aliases", ()) or ()
         for alias in aliases:
             group.alias2name[alias] = name  # type: ignore
     process_help_text(group)

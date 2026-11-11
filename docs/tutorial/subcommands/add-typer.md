@@ -152,6 +152,37 @@ Creating user: Camila
 
 </div>
 
+## Include commands without a subgroup
+
+You can include commands from another application directly in the parent by
+leaving the child application unnamed:
+
+```Python
+import typer_cloup as typer
+
+app = typer.Typer()
+commands = typer.Typer()
+
+
+@commands.command()
+def status():
+    typer.echo("Ready")
+
+
+app.add_sub(commands)
+
+if __name__ == "__main__":
+    app()
+```
+
+Run this command as `python main.py status`. Command aliases and Cloup help
+sections are preserved, and named groups inside the child remain subgroups.
+Included commands replace existing commands with the same name.
+
+A child callback can give the child an inferred group name. Passing `name=""`
+explicitly merges its commands instead; its callback is ignored with a warning.
+Group settings and callback options are not inherited by the parent.
+
 ## Recap
 
 That's the core idea.
