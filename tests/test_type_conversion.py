@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple
 import pytest
 
 import typer_cloup as typer
+from typer_cloup.models import ParamMeta
 from typer_cloup.testing import CliRunner
 
 runner = CliRunner()
@@ -81,6 +82,29 @@ def test_no_type():
     result = runner.invoke(app, ["Camila"])
     assert result.exit_code == 0
     assert "User: Camila" in result.output
+
+
+def test_default_with_custom_equality_is_not_required():
+    class CustomDefault:
+        def __eq__(self, other):
+            return other is ParamMeta.empty
+
+        def __str__(self):
+            return "fallback"
+
+    app = typer.Typer()
+
+    @app.command()
+    def main(value=CustomDefault()):
+        typer.echo(value)
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert result.output == "fallback\n"
+
+    result = runner.invoke(app, ["--value", "provided"])
+    assert result.exit_code == 0, result.output
+    assert result.output == "provided\n"
 
 
 class SomeEnum(Enum):
