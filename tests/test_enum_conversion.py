@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List, Tuple
 
 import pytest
 
@@ -11,6 +12,34 @@ runner = CliRunner()
 class Case(Enum):
     UPPER = "A"
     LOWER = "a"
+
+
+@pytest.mark.parametrize("declaration", [typer.Argument, typer.Option])
+@pytest.mark.parametrize(
+    "annotation, default, displayed",
+    [
+        (Case, Case.UPPER, "A"),
+        (List[Case], [Case.UPPER, Case.LOWER], "A, a"),
+        (Tuple[Case, int], (Case.UPPER, 2), "A, 2"),
+    ],
+    ids=["scalar", "list", "tuple"],
+)
+def test_enum_defaults_display_values(declaration, annotation, default, displayed):
+    app = typer.Typer()
+    values = []
+
+    @app.command()
+    def main(value: annotation = declaration(default)):
+        values.append(value)
+
+    result = runner.invoke(app, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert f"[default: {displayed}]" in result.output
+    assert "Case." not in result.output
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert values == [default]
 
 
 @pytest.mark.parametrize("declaration", [typer.Argument, typer.Option])

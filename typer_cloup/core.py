@@ -1,6 +1,7 @@
 import inspect
 import os
 import sys
+from enum import Enum
 from gettext import gettext as _
 from typing import (
     TYPE_CHECKING,
@@ -38,6 +39,14 @@ def _split_opt(opt: str) -> Tuple[str, str]:
     if opt[1:2] == first:
         return opt[:2], opt[2:]
     return first, opt[1:]
+
+
+def _format_default_value(value: Any) -> str:
+    if isinstance(value, (list, tuple)):
+        return ", ".join(_format_default_value(item) for item in value)
+    if isinstance(value, Enum):
+        return str(value.value)
+    return str(value)
 
 
 class TyperParameterMixin(click.Parameter):
@@ -188,8 +197,8 @@ class TyperArgument(TyperParameterMixin, cloup.Argument):
         ):
             if show_default_is_str:
                 default_string = str(show_default)
-            elif isinstance(default_value, (list, tuple)):
-                default_string = ", ".join(str(d) for d in default_value)
+            elif isinstance(default_value, (list, tuple, Enum)):
+                default_string = _format_default_value(default_value)
             elif callable(default_value):
                 default_string = _("(dynamic)")
             else:
@@ -421,8 +430,8 @@ class TyperOption(TyperParameterMixin, cloup.Option):
         ):
             if show_default_is_str:
                 default_string = str(self.show_default)
-            elif isinstance(default_value, (list, tuple)):
-                default_string = ", ".join(str(d) for d in default_value)
+            elif isinstance(default_value, (list, tuple, Enum)):
+                default_string = _format_default_value(default_value)
             elif callable(default_value):
                 default_string = _("(dynamic)")
             elif self.is_bool_flag and self.secondary_opts:
