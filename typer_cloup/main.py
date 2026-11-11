@@ -678,8 +678,11 @@ def generate_enum_convertor(enum: Type[Enum]) -> Callable[[Any], Any]:
 
 def generate_list_convertor(
     convertor: Optional[Callable[[Any], Any]],
-) -> Callable[[Sequence[Any]], List[Any]]:
-    def internal_convertor(value: Sequence[Any]) -> List[Any]:
+    default_value: Any,
+) -> Callable[[Optional[Sequence[Any]]], Optional[List[Any]]]:
+    def internal_convertor(value: Optional[Sequence[Any]]) -> Optional[List[Any]]:
+        if value is None or (default_value is None and len(value) == 0):
+            return None
         return [convertor(v) if convertor else v for v in value]
 
     return internal_convertor
@@ -909,7 +912,9 @@ def get_click_param(
         )
     convertor = determine_type_convertor(main_type)
     if is_list or parameter_type is SHELL_QUOTED_LIST:
-        convertor = generate_list_convertor(convertor)
+        convertor = generate_list_convertor(
+            convertor=convertor, default_value=default_value
+        )
     if is_tuple:
         convertor = generate_tuple_convertor(get_args(main_type))
     if isinstance(parameter_info, OptionInfo):
