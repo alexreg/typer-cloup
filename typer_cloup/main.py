@@ -190,7 +190,7 @@ class Typer:
         help: Optional[str] = None,
         epilog: Optional[str] = None,
         short_help: Optional[str] = None,
-        options_metavar: str = "[OPTIONS]",
+        options_metavar: Optional[str] = None,
         add_help_option: bool = True,
         no_args_is_help: bool = False,
         hidden: bool = False,
@@ -215,7 +215,11 @@ class Typer:
                 help=help,
                 epilog=epilog,
                 short_help=short_help,
-                options_metavar=options_metavar,
+                options_metavar=(
+                    self._info_val_str("options_metavar")
+                    if options_metavar is None
+                    else options_metavar
+                ),
                 add_help_option=add_help_option,
                 no_args_is_help=no_args_is_help,
                 hidden=hidden,
@@ -328,6 +332,12 @@ class Typer:
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         return get_command(self)(*args, **kwargs)
+
+    def _info_val_str(self, name: str) -> str:
+        val = getattr(self.info, name)
+        val_str = val.value if isinstance(val, DefaultPlaceholder) else val
+        assert isinstance(val_str, str)
+        return val_str
 
 
 def process_help_text(command: click.Command) -> None:

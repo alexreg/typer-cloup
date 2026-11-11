@@ -324,6 +324,66 @@ def test_help_defaults():
     assert "(dynamic)" in result.output
 
 
+def test_single_command_inherits_options_metavar():
+    app = typer.Typer(options_metavar="[FLAGS]")
+
+    @app.command()
+    def main():
+        pass
+
+    result = runner.invoke(app, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[0] == "Usage: main [FLAGS]"
+
+
+def test_group_commands_inherit_options_metavar_with_overrides():
+    app = typer.Typer(name="app", options_metavar="[FLAGS]")
+
+    @app.command()
+    def inherited():
+        pass
+
+    @app.command(options_metavar="[LOCAL]")
+    def local():
+        pass
+
+    @app.command(options_metavar="")
+    def no_label():
+        pass
+
+    for args, expected in [
+        (["--help"], "Usage: app [FLAGS] COMMAND [ARGS]..."),
+        (["inherited", "--help"], "Usage: app inherited [FLAGS]"),
+        (["local", "--help"], "Usage: app local [LOCAL]"),
+        (["no-label", "--help"], "Usage: app no-label"),
+    ]:
+        result = runner.invoke(app, args)
+        assert result.exit_code == 0, result.output
+        assert result.output.splitlines()[0] == expected
+
+
+def test_subapp_options_metavar_precedence():
+    app = typer.Typer(name="app", options_metavar="[ROOT]")
+    child = typer.Typer(options_metavar="[CHILD]")
+
+    @child.callback(options_metavar="[CALLBACK]")
+    def callback():
+        pass
+
+    @child.command()
+    def run():
+        pass
+
+    app.add_sub(child, name="child")
+    for args, expected in [
+        (["child", "--help"], "Usage: app child [CALLBACK] COMMAND [ARGS]..."),
+        (["child", "run", "--help"], "Usage: app child run [CHILD]"),
+    ]:
+        result = runner.invoke(app, args)
+        assert result.exit_code == 0, result.output
+        assert result.output.splitlines()[0] == expected
+
+
 def test_help_option_envvar():
     # Mainly for coverage/completeness
     app = typer.Typer()
