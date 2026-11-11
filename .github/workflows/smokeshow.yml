@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
       - run: pip install smokeshow
       - uses: dawidd6/action-download-artifact@v2.24.2
         with:
