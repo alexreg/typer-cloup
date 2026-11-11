@@ -64,3 +64,50 @@ Training neural network of type: lstm
 ```
 
 </div>
+
+### `Literal` choices
+
+You can also use `typing.Literal` to declare a set of choices directly:
+
+```Python hl_lines="7"
+{!../docs_src/parameter_types/enum/tutorial003.py!}
+```
+
+The value passed to the function is the matching literal value. String choices
+produce strings, while integer choices such as `Literal[1, 2]` produce integers.
+
+```console
+$ python main.py --help
+Usage: main.py [OPTIONS]
+
+Options:
+  --network [simple|conv|lstm]  [default: simple]
+  --help                        Show this message and exit.
+
+$ python main.py --network conv
+Training neural network of type: conv
+
+$ python main.py --network capsule
+Usage: main.py [OPTIONS]
+Try 'main.py --help' for help.
+
+Error: Invalid value for '--network': 'capsule' is not one of 'simple', 'conv', 'lstm'.
+```
+
+`Literal` works with both CLI arguments and options, with or without
+`Annotated`. For example, the older declaration style is also supported:
+
+```Python
+def main(network: Literal["simple", "conv", "lstm"] = typer.Option("simple")):
+    typer.echo(f"Training neural network of type: {network}")
+```
+
+Use `case_sensitive=False` in `typer.Option()` or `typer.Argument()` to accept
+different casing. The function still receives the spelling declared in
+`Literal`. Use an annotation such as `Literal["simple", "conv"] | None` with a
+default of `None` for an optional value.
+
+!!! note
+    `Literal` inside list or tuple annotations, such as
+    `list[Literal["simple", "conv"]]`, is currently unsupported. This also applies
+    to lists declared with `shell_quoted_list=True`.

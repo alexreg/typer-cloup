@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -845,6 +846,11 @@ def get_click_type(
     elif lenient_issubclass(annotation, Enum):
         return TyperChoice(
             [item.value for item in annotation],
+            case_sensitive=parameter_info.case_sensitive,
+        )
+    elif get_origin(annotation) is Literal:
+        return click.Choice(
+            get_args(annotation),
             case_sensitive=parameter_info.case_sensitive,
         )
     raise RuntimeError(f"Type not yet supported: {annotation}")  # pragma no cover
