@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def Option(
     # Parameter
-    default: Optional[Any],
+    default: Optional[Any] = ...,
     *param_decls: str,
     type: Optional[Union[click.types.ParamType[Any], Any]] = None,
     callback: Optional[Callable[..., Any]] = None,
@@ -29,6 +29,7 @@ def Option(
             Union[List["click.shell_completion.CompletionItem"], List[str]],
         ]
     ] = None,
+    default_factory: Optional[Callable[[], Any]] = None,
     # Option
     show_default: Union[bool, str, Callable[[], Union[bool, str]]] = True,
     prompt: Union[bool, str] = False,
@@ -75,6 +76,7 @@ def Option(
     return OptionInfo(
         # Parameter
         default=default,
+        default_factory=default_factory,
         param_decls=param_decls,
         type=type,
         callback=callback,
@@ -128,7 +130,7 @@ def Option(
 
 def Argument(
     # Parameter
-    default: Optional[Any],
+    default: Optional[Any] = ...,
     *,
     type: Optional[Union[click.types.ParamType[Any], Any]] = None,
     callback: Optional[Callable[..., Any]] = None,
@@ -142,6 +144,7 @@ def Argument(
             Union[List["click.shell_completion.CompletionItem"], List[str]],
         ]
     ] = None,
+    default_factory: Optional[Callable[[], Any]] = None,
     # TyperArgument
     show_default: Union[bool, str, Callable[[], Union[bool, str]]] = True,
     show_choices: bool = True,
@@ -180,6 +183,7 @@ def Argument(
     return ArgumentInfo(
         # Parameter
         default=default,
+        default_factory=default_factory,
         # Arguments can only have one param declaration
         # it will be generated from the param name
         param_decls=None,

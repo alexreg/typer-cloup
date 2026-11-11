@@ -267,6 +267,7 @@ class ParameterInfo:
                 Union[List["click.shell_completion.CompletionItem"], List[str]],
             ]
         ] = None,
+        default_factory: Optional[Callable[[], Any]] = None,
         # TyperArgument
         show_default: Union[bool, str, Callable[[], Union[bool, str]]] = True,
         show_choices: bool = True,
@@ -301,6 +302,7 @@ class ParameterInfo:
         shell_quoted_list: bool = False,
     ):
         self.default = default
+        self.default_factory = default_factory
         self.param_decls = param_decls
         self.type = type
         self.callback = callback
@@ -362,6 +364,7 @@ class OptionInfo(ParameterInfo):
                 Union[List["click.shell_completion.CompletionItem"], List[str]],
             ]
         ] = None,
+        default_factory: Optional[Callable[[], Any]] = None,
         # Option
         show_default: Union[bool, str, Callable[[], Union[bool, str]]] = True,
         prompt: Union[bool, str] = False,
@@ -405,6 +408,7 @@ class OptionInfo(ParameterInfo):
     ):
         super().__init__(
             default=default,
+            default_factory=default_factory,
             param_decls=param_decls,
             type=type,
             callback=callback,
@@ -475,6 +479,7 @@ class ArgumentInfo(ParameterInfo):
                 Union[List["click.shell_completion.CompletionItem"], List[str]],
             ]
         ] = None,
+        default_factory: Optional[Callable[[], Any]] = None,
         # TyperArgument
         show_default: Union[bool, str, Callable[[], Union[bool, str]]] = True,
         show_choices: bool = True,
@@ -510,6 +515,7 @@ class ArgumentInfo(ParameterInfo):
     ):
         super().__init__(
             default=default,
+            default_factory=default_factory,
             param_decls=param_decls,
             type=type,
             callback=callback,
