@@ -4,7 +4,7 @@ from enum import Enum
 from functools import update_wrapper
 from importlib import import_module
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, UnionType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -19,6 +19,7 @@ from typing import (
     Union,
     cast,
     get_args,
+    get_origin,
 )
 from uuid import UUID
 
@@ -886,26 +887,26 @@ def get_click_param(
     is_tuple = False
     parameter_type: Any = None
     is_flag = None
-    origin = getattr(main_type, "__origin__", None)
+    origin = get_origin(main_type)
     if parameter_info.type is not None:
         main_type = parameter_info.type
         parameter_type = parameter_info.type
     elif origin is not None:
-        # Handle Optional[SomeType]
-        if origin is Union:
+        # Handle `Optional[SomeType]` and `SomeType | None`.
+        if origin is Union or origin is UnionType:
             types = []
-            for type_ in main_type.__args__:
+            for type_ in get_args(main_type):
                 if type_ is NoneType:
                     continue
                 types.append(type_)
             assert len(types) == 1, "Typer currently doesn't support `Union` types"
             main_type = types[0]
-            origin = getattr(main_type, "__origin__", None)
+            origin = get_origin(main_type)
         # Handle Tuples and Lists
         if lenient_issubclass(origin, List):
-            main_type = main_type.__args__[0]
-            assert not getattr(
-                main_type, "__origin__", None
+            main_type = get_args(main_type)[0]
+            assert not get_origin(
+                main_type
             ), "List types with complex sub-types are not currently supported"
             if parameter_info.shell_quoted_list:
                 parameter_type = SHELL_QUOTED_LIST
@@ -913,9 +914,9 @@ def get_click_param(
                 is_list = True
         elif lenient_issubclass(origin, Tuple):  # type: ignore
             types = []
-            for type_ in main_type.__args__:
-                assert not getattr(
-                    type_, "__origin__", None
+            for type_ in get_args(main_type):
+                assert not get_origin(
+                    type_
                 ), "Tuple types with complex sub-types are not currently supported"
                 types.append(
                     get_click_type(annotation=type_, parameter_info=parameter_info)

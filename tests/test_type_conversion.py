@@ -11,11 +11,12 @@ from typer_cloup.testing import CliRunner
 runner = CliRunner()
 
 
-def test_optional():
+@pytest.mark.parametrize("annotation", [Optional[str], str | None])
+def test_optional(annotation):
     app = typer.Typer()
 
     @app.command()
-    def opt(user: Optional[str] = None):
+    def opt(user: annotation = None):
         if user:
             typer.echo(f"User: {user}")
         else:
@@ -30,12 +31,15 @@ def test_optional():
     assert "User: Camila" in result.output
 
 
-def test_optional_tuple():
+@pytest.mark.parametrize(
+    "annotation", [Optional[Tuple[int, int]], tuple[int, int] | None]
+)
+def test_optional_tuple(annotation):
     app = typer.Typer()
     values = []
 
     @app.command()
-    def main(numbers: Optional[Tuple[int, int]] = None):
+    def main(numbers: annotation = None):
         values.append(numbers)
 
     result = runner.invoke(app)
@@ -45,6 +49,23 @@ def test_optional_tuple():
     result = runner.invoke(app, ["--numbers", "4", "2"])
     assert result.exit_code == 0, result.output
     assert values == [None, (4, 2)]
+
+
+def test_union_type_optional_list():
+    app = typer.Typer()
+    values = []
+
+    @app.command()
+    def main(paths: list[Path] | None = None):
+        values.append(paths)
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert values == [None]
+
+    result = runner.invoke(app, ["--paths", "one", "--paths", "two"])
+    assert result.exit_code == 0, result.output
+    assert values == [None, [Path("one"), Path("two")]]
 
 
 @pytest.mark.parametrize("declaration", [typer.Argument, typer.Option])
