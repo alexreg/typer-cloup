@@ -174,7 +174,7 @@ class TyperArgument(TyperParameterMixin, cloup.Argument):
                     if isinstance(envvar, (list, tuple))
                     else envvar
                 )
-                extra.append(f"env var: {var_str}")
+                extra.append(_("env var: {var}").format(var=var_str))
 
         # Temporarily enable resilient parsing to avoid type casting
         # failing for the default. Might be possible to extend this to
@@ -529,7 +529,7 @@ class TyperCommand(cloup.Command):
         if all(is_arg_hidden(arg) for arg in self.arguments):
             return None
         return cloup.HelpSection(
-            heading="Arguments",
+            heading=_("Arguments"),
             definitions=[
                 self.get_argument_help_record(arg, ctx)
                 for arg in self.arguments
@@ -551,7 +551,7 @@ class TyperCommand(cloup.Command):
         Return an `OptionGroup` instance for the options not explicitly
         assigned to an option group, eventually including the `--help` option.
         """
-        default_group = cloup.OptionGroup("Options")
+        default_group = cloup.OptionGroup(_("Options"))
         default_group.options = self.get_ungrouped_options(ctx)
         return default_group
 
