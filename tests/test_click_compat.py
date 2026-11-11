@@ -7,7 +7,7 @@ from click.testing import CliRunner as ClickCliRunner
 
 import typer_cloup as typer
 from typer_cloup.core import TyperArgument, TyperCommand, TyperOption
-from typer_cloup.testing import CliRunner
+from typer_cloup.testing import CliRunner, columns_match
 
 
 @pytest.mark.parametrize("help", [None, "Native argument"])
@@ -79,6 +79,26 @@ def test_metavar_with_optional_context(param_class, declaration, expected):
     ctx = click.Context(click.Command("main"))
     assert param.make_metavar(ctx) == expected
     assert param.make_metavar() == param.make_metavar(ctx)
+
+
+@pytest.mark.parametrize(
+    "default, metavar",
+    [(None, "[VALUE]"), (..., "VALUE")],
+    ids=["already-bracketed", "required"],
+)
+def test_argument_custom_metavar(default, metavar):
+    app = typer.Typer()
+
+    @app.command()
+    def main(
+        value: str = typer.Argument(default, metavar=metavar, help="Custom value")
+    ):
+        typer.echo(value)
+
+    result = CliRunner().invoke(app, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert f"Usage: main [OPTIONS] {metavar}\n" in result.output
+    assert columns_match(result.output, metavar, "Custom value")
 
 
 def test_argument_metavar_legacy_custom_type():

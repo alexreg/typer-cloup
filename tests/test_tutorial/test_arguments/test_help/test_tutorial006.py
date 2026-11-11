@@ -14,9 +14,9 @@ app.command()(mod.main)
 def test_help():
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "[OPTIONS] ✨username✨" in result.output
+    assert "Usage: main [OPTIONS] [✨username✨]" in result.output
     assert "Arguments:" in result.output
-    assert columns_match(result.output, "✨username✨", "[default: World]")
+    assert columns_match(result.output, "[✨username✨]", "[default: World]")
 
 
 def test_call_arg():
