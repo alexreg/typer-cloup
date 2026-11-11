@@ -7,21 +7,20 @@ on:
       - completed
 jobs:
   preview-docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Clean site
         run: |
           rm -rf ./site
           mkdir ./site
       - name: Download Artifact Docs
-        uses: dawidd6/action-download-artifact@v2.24.2
+        uses: actions/download-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: build-docs.yml
-          run_id: ${{ github.event.workflow_run.id }}
           name: docs-zip
           path: ./site/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
       - name: Unzip docs
         run: |
           cd ./site
