@@ -29,6 +29,48 @@ def test_optional():
     assert "User: Camila" in result.output
 
 
+def test_optional_tuple():
+    app = typer.Typer()
+    values = []
+
+    @app.command()
+    def main(numbers: Optional[Tuple[int, int]] = None):
+        values.append(numbers)
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert values == [None]
+
+    result = runner.invoke(app, ["--numbers", "4", "2"])
+    assert result.exit_code == 0, result.output
+    assert values == [None, (4, 2)]
+
+
+@pytest.mark.parametrize("declaration", [typer.Argument, typer.Option])
+def test_optional_tuple_callback_returns_none(declaration):
+    app = typer.Typer()
+    callback_values = []
+    command_values = []
+
+    def callback(value):
+        callback_values.append(value)
+        return None
+
+    @app.command()
+    def main(
+        numbers: Optional[Tuple[int, int]] = declaration(None, callback=callback),
+    ):
+        command_values.append(numbers)
+
+    for args, expected in [([], None), (["4", "2"], (4, 2))]:
+        if args and declaration is typer.Option:
+            args.insert(0, "--numbers")
+        result = runner.invoke(app, args)
+        assert result.exit_code == 0, result.output
+        assert callback_values[-1] == expected
+        assert command_values[-1] is None
+
+
 def test_no_type():
     app = typer.Typer()
 
