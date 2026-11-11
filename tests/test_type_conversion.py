@@ -11,6 +11,30 @@ from typer_cloup.testing import CliRunner
 runner = CliRunner()
 
 
+@pytest.mark.parametrize("declaration", [typer.Argument, typer.Option])
+def test_path_callback_preserves_subclass(declaration):
+    class CustomPath(type(Path())):
+        pass
+
+    expected = CustomPath("somewhere")
+    values = []
+    app = typer.Typer()
+
+    def callback(value):
+        assert isinstance(value, Path)
+        assert value == expected
+        return expected
+
+    @app.command()
+    def main(value: Path = declaration(..., callback=callback)):
+        values.append(value)
+
+    args = ["--value", "somewhere"] if declaration is typer.Option else ["somewhere"]
+    result = runner.invoke(app, args)
+    assert result.exit_code == 0, result.output
+    assert values[0] is expected
+
+
 @pytest.mark.parametrize("annotation", [Optional[str], str | None])
 def test_optional(annotation):
     app = typer.Typer()

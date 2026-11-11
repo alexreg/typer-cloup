@@ -669,9 +669,9 @@ def determine_type_convertor(type_: Any) -> Optional[Callable[[Any], Any]]:
     return convertor
 
 
-def param_path_convertor(value: Optional[str] = None) -> Optional[Path]:
+def param_path_convertor(value: Optional[Union[str, Path]] = None) -> Optional[Path]:
     if value is not None:
-        return Path(value)
+        return value if isinstance(value, Path) else Path(value)
     return None
 
 
